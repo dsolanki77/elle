@@ -96,6 +96,7 @@ ITEMS = [
         "id": "tal-glitter",
         "keywords": "glitter,sparkle,gold",
         "w": 700, "h": 600, "lock": 88,
+        "url":"https://festivalglitter.co.uk/cdn/shop/products/rose-gold-2_1080x.jpg?v=1523394788"
     },
     {
         "id": "tal-chopstick",
@@ -239,6 +240,21 @@ ITEMS = [
         "keywords": "bedroom,cozy,mattress,sleep",
         "w": 900, "h": 500, "lock": 300,
         "url": "blob:https://gemini.google.com/9b53768d-d6cf-4416-91f9-1ced771b40ef"
+    },
+    {
+        "id": "sherry",
+        "keywords": "yellow,door,bright",
+        "w": 600, "h": 900, "lock": 310,
+    },
+    {
+        "id": "katie",
+        "keywords": "sparklers,fire,night",
+        "w": 900, "h": 600, "lock": 320,
+    },
+    {
+        "id": "nupoor",
+        "keywords": "crabs,seafood,claws",
+        "w": 800, "h": 800, "lock": 330,
     },
 ]
 
