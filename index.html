@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elle.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper:    #EFE7CC;
+      --paper-wh: #FBF8EF;
+      --red:      #C21B2F;
+      --yellow:   #D4A017;
+      --ink:      #1C1410;
+      --ink-mid:  #5A4E44;
+      --ink-lt:   #9A8E84;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--paper);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect x='5' y='5' width='90' height='90' fill='none' stroke='rgba(40%2C28%2C16%2C0.055)' stroke-width='1'/%3E%3Crect x='18' y='18' width='64' height='64' fill='none' stroke='rgba(40%2C28%2C16%2C0.038)' stroke-width='0.6'/%3E%3Cline x1='50' y1='5' x2='50' y2='95' stroke='rgba(40%2C28%2C16%2C0.026)' stroke-width='0.5'/%3E%3Cline x1='5' y1='50' x2='95' y2='50' stroke='rgba(40%2C28%2C16%2C0.026)' stroke-width='0.5'/%3E%3C/svg%3E");
+      font-family: 'Noto Sans KR', 'Helvetica Neue', sans-serif;
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.038;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── Header ───────────────────────────────────────── */
+    .site-header {
+      text-align: center;
+      padding: 68px 40px 44px;
+    }
+
+    .korean-eyebrow {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--red);
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(96px, 17vw, 172px);
+      font-weight: 700;
+      font-style: normal;
+      letter-spacing: -0.04em;
+      line-height: 0.86;
+      color: var(--ink);
+      display: inline-block;
+    }
+
+    .title::after {
+      content: '';
+      display: block;
+      height: 6px;
+      background: var(--red);
+      margin-top: 10px;
+      transform: skewX(-2deg);
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 22px;
+    }
+
+    .subtitle {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--ink-mid);
+      font-weight: 300;
+    }
+
+    .stamp {
+      display: inline-block;
+      border: 2px solid var(--red);
+      color: var(--red);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      padding: 4px 10px;
+      transform: rotate(-4deg);
+      text-transform: uppercase;
+    }
+
+    .instruction {
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--ink-lt);
+      font-style: italic;
+    }
+
+    /* ─── Artboard canvas ──────────────────────────────── */
+    .canvas {
+      position: relative;
+      width: 100%;
+      max-width: 95vw;
+      height: 140vw;
+      min-height: 1000px;
+      max-height: 2200px;
+      margin: 0 auto 80px;
+    }
+
+    /* ─── Shared item styles ───────────────────────────── */
+    .item-wrap {
+      position: absolute;
+      cursor: pointer;
+      transition: z-index 0s;
+    }
+
+    .item-wrap:hover,
+    .item-wrap.is-active { z-index: 50; }
+
+    .item {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .item__img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: sepia(0.25) saturate(0.7) brightness(0.97);
+      transition:
+        filter   0.42s ease,
+        transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .item-wrap:hover .item__img,
+    .item-wrap.is-active .item__img {
+      filter: sepia(0.05) saturate(0.45) brightness(0.60);
+      transform: scale(1.08);
+    }
+
+    .item__overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 10, 4, 0.72);
+      border-top: 3px solid var(--red);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .item-wrap:hover .item__overlay,
+    .item-wrap.is-active .item__overlay { opacity: 1; }
+
+    /* ─── Floating label ───────────────────────────────── */
+    .label {
+      position: fixed;
+      background: rgba(18, 10, 4, 0.94);
+      border-left: 3px solid var(--red);
+      padding: 16px 20px 18px;
+      min-width: 200px;
+      max-width: 280px;
+      z-index: 9000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.22s ease;
+    }
+
+    .label.is-visible { opacity: 1; }
+
+    .label__object {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--paper-wh);
+      line-height: 1.25;
+      margin-bottom: 9px;
+    }
+
+    .label__reason {
+      font-size: 11.5px;
+      line-height: 1.68;
+      color: rgba(251, 248, 239, 0.66);
+      font-weight: 300;
+      margin-bottom: 13px;
+      max-width: 28ch;
+    }
+
+    .label__name {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--yellow);
+    }
+
+    /* ─────────────────────────────────────────────────────
+       PER-ITEM: position · size · rotation · shadow · clip
+       Canvas is 200vw tall. top/height % are of that height.
+       left/width % are of canvas width.
+    ───────────────────────────────────────────────────── */
+
+    /* BROTHER — baobab tree: thick trunk, wide spreading top */
+    .item-wrap--brother {
+      left: 1%; top: 1%; width: 26%; height: 19%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(6px 10px 28px rgba(20,12,6,0.38));
+      z-index: 5;
+    }
+    .item-wrap--brother .item {
+      clip-path: polygon(
+        38% 100%, 28% 82%, 12% 88%, 8% 68%, 0% 58%,
+        6% 42%, 0% 26%, 10% 14%, 22% 6%, 38% 2%,
+        55% 4%, 70% 10%, 82% 22%, 88% 38%,
+        84% 55%, 94% 62%, 100% 74%, 88% 90%, 72% 82%, 62% 100%
+      );
+    }
+
+    /* RANI — sunflower: 8-petal flower */
+    .item-wrap--rani {
+      left: 28%; top: 0%; width: 17%; height: 24%;
+      transform: rotate(2deg);
+      filter: drop-shadow(5px 8px 22px rgba(20,12,6,0.32));
+      z-index: 4;
+    }
+    .item-wrap--rani .item {
+      clip-path: polygon(
+        50% 0%, 62% 15%, 78% 8%, 74% 24%, 94% 26%,
+        82% 40%, 98% 52%, 82% 64%, 94% 78%, 74% 76%,
+        78% 92%, 62% 85%, 50% 100%, 38% 85%, 22% 92%,
+        26% 76%, 6% 78%, 18% 64%, 2% 52%, 18% 40%,
+        6% 26%, 26% 24%, 22% 8%, 38% 15%
+      );
+    }
+
+    /* TAL — wind-up toy: boxy mechanical shape */
+    .item-wrap--tal-toy {
+      left: 68%; top: 0.5%; width: 11%; height: 8.5%;
+      transform: rotate(4deg);
+      filter: drop-shadow(4px 5px 14px rgba(20,12,6,0.28));
+      z-index: 3;
+    }
+    .item-wrap--tal-toy .item {
+      clip-path: polygon(15% 0%, 85% 0%, 100% 12%, 100% 70%, 85% 88%, 60% 100%, 40% 100%, 15% 88%, 0% 70%, 0% 12%);
+    }
+
+    /* TAL — snow globe: domed oval on pedestal */
+    .item-wrap--tal-globe {
+      left: 77%; top: 3%; width: 12%; height: 10%;
+      transform: rotate(-2deg);
+      filter: drop-shadow(4px 6px 16px rgba(20,12,6,0.30));
+      z-index: 4;
+    }
+    .item-wrap--tal-globe .item {
+      clip-path: polygon(
+        35% 100%, 22% 96%, 12% 86%, 4% 72%, 0% 56%,
+        2% 40%, 8% 26%, 18% 14%, 32% 6%, 50% 2%,
+        68% 6%, 82% 14%, 92% 26%, 98% 40%, 100% 56%,
+        96% 72%, 88% 86%, 78% 96%, 65% 100%
+      );
+    }
+
+    /* TAL — rubber band ball: circle */
+    .item-wrap--tal-ball {
+      left: 67%; top: 8%; width: 10%; height: 7.5%;
+      transform: rotate(6deg);
+      filter: drop-shadow(3px 4px 12px rgba(20,12,6,0.26));
+      z-index: 3;
+    }
+    .item-wrap--tal-ball .item { clip-path: ellipse(46% 46% at 50% 50%); }
+
+    /* TAL — glitter: soft starburst blob */
+    .item-wrap--tal-glitter {
+      left: 77%; top: 10%; width: 11%; height: 8%;
+      transform: rotate(3deg);
+      filter: drop-shadow(3px 4px 12px rgba(20,12,6,0.26));
+      z-index: 3;
+    }
+    .item-wrap--tal-glitter .item {
+      clip-path: polygon(45% 5%, 80% 20%, 95% 50%, 85% 85%, 50% 95%, 15% 80%, 5% 45%, 20% 15%);
+    }
+
+    /* TAL — chopstick as hairpin: angled strip */
+    .item-wrap--tal-chopstick {
+      left: 86%; top: 0.5%; width: 20%; height: 18%;
+      transform: rotate(1.5deg);
+      filter: drop-shadow(2px 4px 10px rgba(20,12,6,0.24));
+      z-index: 2;
+    }
+    .item-wrap--tal-chopstick .item {
+      clip-path: polygon(10% 5%, 90% 2%, 92% 98%, 8% 95%);
+    }
+    .item-wrap--tal-chopstick .item__img {
+      object-position: 40% 50%;
+    }
+
+    /* GINA — hellfire: soft organic shape */
+    .item-wrap--gina {
+      left: 79%; top: 11%; width: 18%; height: 21%;
+      transform: rotate(-2deg);
+      filter: drop-shadow(4px 6px 16px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--gina .item {
+      clip-path: ellipse(42% 42% at 50% 50%);
+    }
+    .item-wrap--gina .item__img {
+      object-fit: cover;
+      transform: scale(0.95);
+    }
+
+    /* SAIF — spin bike: circle (flywheel) */
+    .item-wrap--saif {
+      left: 46%; top: 7%; width: 24%; height: 12%;
+      transform: rotate(2deg);
+      filter: drop-shadow(5px 7px 20px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--saif .item { clip-path: ellipse(48% 44% at 50% 50%); }
+    .item-wrap--saif .item__img { object-position: 20% 50%; }
+
+    /* SANGEETA MAMI — pillow: soft rounded rect */
+    .item-wrap--sangeeta {
+      left: 1%; top: 19%; width: 20%; height: 11%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.28));
+      z-index: 4;
+    }
+    .item-wrap--sangeeta .item {
+      clip-path: polygon(8% 2%, 92% 0%, 100% 10%, 100% 90%, 92% 100%, 8% 100%, 0% 90%, 0% 10%);
+    }
+
+    /* CLAIRE YUN — cappuccino: circle */
+    .item-wrap--claireyun {
+      left: 21%; top: 17%; width: 15%; height: 12%;
+      transform: rotate(3deg);
+      filter: drop-shadow(4px 6px 16px rgba(20,12,6,0.28));
+      z-index: 3;
+    }
+    .item-wrap--claireyun .item { clip-path: ellipse(46% 46% at 50% 50%); }
+
+    /* ALKA MASI — beach (walking barefoot): wide with wave bottom */
+    .item-wrap--alkamasi1 {
+      left: 35%; top: 16%; width: 29%; height: 11%;
+      transform: rotate(2deg);
+      filter: drop-shadow(5px 7px 20px rgba(20,12,6,0.28));
+      z-index: 2;
+    }
+    .item-wrap--alkamasi1 .item {
+      clip-path: polygon(
+        0% 0%, 100% 0%, 100% 75%, 
+        90% 70%, 75% 80%, 60% 70%, 
+        45% 85%, 30% 75%, 15% 85%, 0% 75%
+      );
+    }
+
+    /* LUCY — campfire: organic arch/blob */
+    .item-wrap--lucy {
+      left: 34%; top: 25%; width: 14%; height: 15%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.32));
+      z-index: 4;
+    }
+    .item-wrap--lucy .item {
+      clip-path: polygon(50% 5%, 80% 25%, 95% 65%, 85% 95%, 15% 95%, 5% 65%, 20% 25%);
+    }
+
+    /* ELAINE — forever21 website: shopping bag */
+    .item-wrap--elaine {
+      left: 1%; top: 30%; width: 15%; height: 13%;
+      transform: rotate(2deg);
+      filter: drop-shadow(4px 5px 16px rgba(20,12,6,0.28));
+      z-index: 3;
+    }
+    .item-wrap--elaine .item {
+      clip-path: polygon(25% 0%, 18% 14%, 5% 14%, 0% 22%, 0% 100%, 100% 100%, 100% 22%, 95% 14%, 82% 14%, 75% 0%);
+    }
+
+    /* CENGIZ — Super Saiyan hair: transparent PNG, silhouette defines its own shape */
+    .item-wrap--cengiz {
+      left: 63%; top: 16%; width: 15%; height: 19%;
+      transform: rotate(-2deg);
+      filter: drop-shadow(5px 7px 20px rgba(20,12,6,0.30));
+      z-index: 4;
+    }
+    .item-wrap--cengiz .item { clip-path: none; }
+    .item-wrap--cengiz .item__img { object-fit: contain; }
+
+    /* ADIL — Snorlax: transparent PNG, let the sprite define its own shape */
+    .item-wrap--adil {
+      left: 51%; top: 29%; width: 18%; height: 15%;
+      transform: rotate(3deg);
+      filter: drop-shadow(5px 8px 22px rgba(20,12,6,0.32));
+      z-index: 3;
+    }
+    .item-wrap--adil .item { clip-path: none; }
+    .item-wrap--adil .item__img { object-fit: contain; }
+    .item-wrap--adil .item__overlay { mask-image: url('images/adil.png'); mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-image: url('images/adil.png'); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; }
+
+    /* DANNY — Snorlax */
+    .item-wrap--danny {
+      left: 64%; top: 31%; width: 16%; height: 13%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(5px 8px 22px rgba(20,12,6,0.32));
+      z-index: 4;
+    }
+    .item-wrap--danny .item { clip-path: none; }
+    .item-wrap--danny .item__img { object-fit: contain; }
+    .item-wrap--danny .item__overlay { mask-image: url('images/danny.png'); mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-image: url('images/danny.png'); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; }
+
+    /* ADRIENNE — Snorlax (with crown ✓) */
+    .item-wrap--adrienne {
+      left: 57%; top: 37%; width: 20%; height: 16%;
+      transform: rotate(1deg);
+      filter: drop-shadow(5px 8px 24px rgba(20,12,6,0.36));
+      z-index: 5;
+    }
+    .item-wrap--adrienne .item { clip-path: none; }
+    .item-wrap--adrienne .item__img { object-fit: contain; }
+    .item-wrap--adrienne .item__overlay { mask-image: url('images/adrienne.png'); mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-image: url('images/adrienne.png'); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; }
+
+    /* Crown above Adrienne's Snorlax */
+    .item-wrap--adrienne::after {
+      content: '👑';
+      position: absolute;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%) rotate(-5deg);
+      font-size: min(2.6vw, 36px);
+      line-height: 1;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.65), 0 0 14px rgba(255,215,0,0.5);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* DAVID KENNEDY — Snorlax */
+    .item-wrap--david {
+      left: 73%; top: 27%; width: 15%; height: 13%;
+      transform: rotate(4deg);
+      filter: drop-shadow(5px 8px 22px rgba(20,12,6,0.30));
+      z-index: 2;
+    }
+    .item-wrap--david .item { clip-path: none; }
+    .item-wrap--david .item__img { object-fit: contain; }
+    .item-wrap--david .item__overlay { mask-image: url('images/david.png'); mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-image: url('images/david.png'); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; }
+
+    /* MICHAEL WONG — raven card: portrait card shape */
+    .item-wrap--michael {
+      left: 32%; top: 36%; width: 13%; height: 18%;
+      transform: rotate(-2deg);
+      filter: drop-shadow(5px 7px 20px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--michael .item {
+      clip-path: polygon(2% 0%, 98% 1%, 100% 99%, 0% 100%);
+    }
+
+    /* ALKA MASI — pixie dust: soft blob burst */
+    .item-wrap--alkamasi2 {
+      left: 48%; top: 47%; width: 15%; height: 11%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(4px 5px 16px rgba(20,12,6,0.28));
+      z-index: 3;
+    }
+    .item-wrap--alkamasi2 .item {
+      clip-path: polygon(30% 5%, 75% 15%, 95% 45%, 85% 85%, 45% 95%, 15% 75%, 5% 40%, 15% 15%);
+    }
+
+    /* KIRBNOJ — techno sunglasses: softer rounded glasses shape */
+    .item-wrap--kirbnoj {
+      left: 7%; top: 43%; width: 28%; height: 10%;
+      transform: rotate(2deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.30));
+      z-index: 4;
+    }
+    .item-wrap--kirbnoj .item {
+      clip-path: polygon(
+        5% 40%, 15% 10%, 45% 15%, 50% 30%, 
+        55% 15%, 85% 10%, 95% 40%, 90% 80%, 
+        75% 90%, 55% 80%, 50% 65%, 45% 80%, 
+        25% 90%, 10% 80%
+      );
+    }
+
+    /* TIM — jujube (red date): oval */
+    .item-wrap--tim1 {
+      left: 2%; top: 51%; width: 13%; height: 8.5%;
+      transform: rotate(-4deg);
+      filter: drop-shadow(3px 5px 14px rgba(20,12,6,0.28));
+      z-index: 3;
+    }
+    .item-wrap--tim1 .item { clip-path: ellipse(44% 47% at 50% 52%); }
+
+    /* TIM — double yolk egg: oval */
+    .item-wrap--tim2 {
+      left: 13%; top: 55%; width: 12%; height: 9%;
+      transform: rotate(4deg);
+      filter: drop-shadow(3px 5px 14px rgba(20,12,6,0.28));
+      z-index: 4;
+    }
+    .item-wrap--tim2 .item { clip-path: ellipse(40% 47% at 50% 52%); }
+    .item-wrap--tim2 .item__img { object-position: 50% 80%; }
+
+    /* PIPE & MARI — alien (Ellieeeen 👽): large oval head */
+    .item-wrap--pipe {
+      left: 81%; top: 43%; width: 13%; height: 16%;
+      transform: rotate(-1deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--pipe .item {
+      clip-path: ellipse(48% 46% at 50% 50%);
+    }
+
+    /* CLAIRE — mac and cheese: bowl shape */
+    .item-wrap--claire {
+      left: 65%; top: 48%; width: 18%; height: 13%;
+      transform: rotate(3deg);
+      filter: drop-shadow(4px 5px 16px rgba(20,12,6,0.28));
+      z-index: 3;
+    }
+    .item-wrap--claire .item {
+      clip-path: ellipse(48% 42% at 50% 50%);
+    }
+    .item-wrap--claire .item__img {
+      object-fit: contain;
+    }
+
+    /* RHAN — Bath & Body Works: wide label rectangle */
+    .item-wrap--rhan {
+      left: 28%; top: 50%; width: 18%; height: 9%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(4px 5px 16px rgba(20,12,6,0.28));
+      z-index: 4;
+    }
+    .item-wrap--rhan .item {
+      clip-path: polygon(0% 2%, 100% 0%, 98% 100%, 2% 98%);
+    }
+
+    /* AMANDA — sparkling takeout container: pentagon box */
+    .item-wrap--amanda {
+      left: 43%; top: 55%; width: 19%; height: 12%;
+      transform: rotate(2deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--amanda .item {
+      clip-path: polygon(18% 0%, 82% 0%, 100% 16%, 100% 100%, 0% 100%, 0% 16%);
+    }
+
+    /* JO ANUS — sleepy panda: circle with ear bumps */
+    .item-wrap--joanus {
+      left: 1%; top: 66%; width: 16%; height: 12%;
+      transform: rotate(-3deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.30));
+      z-index: 4;
+    }
+    .item-wrap--joanus .item {
+      clip-path: polygon(
+        30% 0%, 22% 10%, 8% 6%, 2% 20%, 0% 38%,
+        4% 56%, 14% 72%, 28% 84%, 50% 90%,
+        72% 84%, 86% 72%, 96% 56%, 100% 38%,
+        98% 20%, 92% 6%, 78% 10%, 70% 0%,
+        65% 12%, 50% 8%, 35% 12%
+      );
+    }
+
+    /* SUMIN — 부르부르도그 (dog): wide oval */
+    .item-wrap--sumin {
+      left: 17%; top: 63%; width: 18%; height: 16%;
+      transform: rotate(3deg);
+      filter: drop-shadow(4px 6px 18px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--sumin .item {
+      clip-path: ellipse(46% 46% at 50% 50%);
+    }
+    .item-wrap--sumin .item__img {
+      object-position: 50% 100%;
+    }
+
+    /* JENNIFER BYUN — medium-rare salmon: fish silhouette */
+    .item-wrap--jennifer {
+      left: 52%; top: 65%; width: 21%; height: 11%;
+      transform: rotate(-2deg);
+      filter: drop-shadow(5px 7px 20px rgba(20,12,6,0.30));
+      z-index: 3;
+    }
+    .item-wrap--jennifer .item {
+      clip-path: polygon(
+        0% 50%, 12% 28%, 24% 14%, 40% 6%,
+        60% 4%, 76% 10%, 88% 24%, 95% 40%,
+        100% 28%, 100% 72%, 95% 60%,
+        88% 76%, 76% 90%, 60% 96%, 40% 94%,
+        24% 86%, 12% 72%
+      );
+    }
+
+    /* SHREYA — the sun setting: wide arch */
+    .item-wrap--shreya {
+      left: 63%; top: 67%; width: 32%; height: 13%;
+      transform: rotate(1deg);
+      filter: drop-shadow(5px 8px 22px rgba(20,12,6,0.30));
+      z-index: 2;
+    }
+    .item-wrap--shreya .item {
+      clip-path: polygon(0% 58%, 8% 36%, 18% 18%, 32% 8%, 50% 3%, 68% 8%, 82% 18%, 92% 36%, 100% 58%, 100% 100%, 0% 100%);
+    }
+
+    /* ARI — futon: flat wide rectangle */
+    .item-wrap--ari {
+      left: 28%; top: 78%; width: 28%; height: 7%;
+      transform: rotate(-1deg);
+      filter: drop-shadow(3px 4px 12px rgba(20,12,6,0.24));
+      z-index: 3;
+    }
+    .item-wrap--ari .item {
+      clip-path: polygon(1% 0%, 99% 2%, 100% 100%, 0% 98%);
+    }
+
+    /* ─── Footer ───────────────────────────────────────── */
+    .site-footer {
+      text-align: center;
+      padding: 0 40px 64px;
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--ink-lt);
+    }
+
+    /* ─── Responsive ───────────────────────────────────── */
+    @media (max-width: 860px) {
+      .canvas { height: 180vw; max-height: none; }
+    }
+
+    @media (max-width: 520px) {
+      .canvas { height: 240vw; }
+      .label { max-width: 220px; }
+      .label__reason { font-size: 10.5px; }
+    }
+
+    /* ─── Print ────────────────────────────────────────── */
+    @media print {
+      @page { size: A2 landscape; margin: 8mm; }
+      body::after { display: none; }
+      .site-header { padding: 12mm 0 8mm; }
+      .instruction { display: none; }
+      .title { font-size: 56pt; }
+      .canvas { height: 165mm; min-height: 0; max-height: none; margin-bottom: 0; }
+      .item__overlay { display: none !important; }
+      .item__img {
+        filter: sepia(0.18) saturate(0.85) brightness(0.96) !important;
+        transform: none !important;
+      }
+      .label { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <p class="korean-eyebrow">생일 축하해요</p>
+  <h1 class="title">Elle.</h1>
+  <div class="header-meta">
+    <span class="subtitle">a portrait in objects</span>
+    <span class="stamp">2026</span>
+    <span class="subtitle">by the people who love you</span>
+  </div>
+  <p class="instruction">hover over each to hear from them</p>
+</header>
+
+<main class="canvas" id="canvas"></main>
+
+<div class="label" id="label" aria-hidden="true">
+  <h3 class="label__object"></h3>
+  <p class="label__reason"></p>
+  <span class="label__name"></span>
+</div>
+
+<footer class="site-footer"><span>made with love</span></footer>
+
+<script>
+  const contributors = [
+    {
+      id: 'brother', name: 'Brother',
+      object: 'Baobab tree',
+      reason: 'A heart as firm and thick as a baobab.',
+      image: 'images/brother.jpg'
+    },
+    {
+      id: 'rani', name: 'Rani, Mohit, Maya & Jelly',
+      object: 'Sunflower',
+      reason: 'Sunflowers always find a way to face the light — towards the sun or towards each other. They always look for the brightness in this world, and that reminds us of Elle.',
+      image: 'images/rani.jpg'
+    },
+    {
+      id: 'gina', name: 'Gina',
+      object: 'Two people laughing in hellfire',
+      reason: 'If I\'m ever in a dire situation, I\'d want Elle with me — she can make any situation funny, beautiful, and full of hope, or turn it into a forever home if that\'s all we could do.',
+      image: 'images/gina.jpg'
+    },
+    {
+      id: 'saif', name: 'Saif',
+      object: 'Spin bike',
+      reason: 'I convinced her to join me for a 20 min Tabata workout. I was convinced my bike was broken when we compared outputs — turns out she just destroyed me. I\'ll never look at a spin bike the same.',
+      image: 'images/saif.jpg'
+    },
+    {
+      id: 'tal-toy', name: 'Tal',
+      object: 'Wind-up toy',
+      reason: 'Going from full send to complete stop abruptly. Needs little inputs to generate surprising outputs.',
+      image: 'images/tal-toy.jpg'
+    },
+    {
+      id: 'tal-globe', name: 'Tal',
+      object: 'Thrifted snow globe',
+      reason: 'Comes from elsewhere. A small world that is complete and contained — can be chaotic when shaken.',
+      image: 'images/tal-globe.jpg'
+    },
+    {
+      id: 'tal-ball', name: 'Tal',
+      object: 'Rubber band ball',
+      reason: 'Built from scraps over years, held together by tension. Useful in a crisis.',
+      image: 'images/tal-ball.jpg'
+    },
+    {
+      id: 'tal-glitter', name: 'Tal',
+      object: 'Loose glitter in a pocket',
+      reason: 'I don\'t know how it got there. Brings memories from another time. It\'s now everywhere, and the room is better for it.',
+      image: 'images/tal-glitter.jpg'
+    },
+    {
+      id: 'tal-chopstick', name: 'Tal',
+      object: 'Chopstick as a hairpin',
+      reason: 'Improvised, holding everything together. Technically not the right tool — and yet.',
+      image: 'images/tal-chopstick.jpg'
+    },
+    {
+      id: 'sangeeta', name: 'Sangeeta Mami & Sanjay Mamu',
+      object: 'Pillow',
+      reason: 'She can sleep anywhere, anytime — just like that! People could be talking loud around her but nothing matters to her. Quick wink 😉',
+      image: 'images/sangeeta.jpg'
+    },
+    {
+      id: 'claireyun', name: 'Claire Yun',
+      object: 'A cappuccino in a beautiful mug',
+      reason: 'A good cup of coffee is a small piece of sunlight in your day that never gets old. That\'s her vibe — deeper than drinks, warmer than anything.',
+      image: 'images/claireyun.jpg'
+    },
+    {
+      id: 'alkamasi1', name: 'Alka Masi',
+      object: 'Walking barefoot on a beach',
+      reason: 'It was very sweet of Elle to come visit the family. We love her free spirited personality.',
+      image: 'images/alkamasi1.jpg'
+    },
+    {
+      id: 'lucy', name: 'Lucy',
+      object: 'Campfire',
+      reason: 'People gather around it naturally. It exists fully in the present moment — it\'s nature, it\'s always a highlight of our trips.',
+      image: 'images/lucy.jpg'
+    },
+    {
+      id: 'elaine', name: 'Elaine',
+      object: 'The Forever 21 website',
+      reason: 'Freshman year and our constant distraction by the Forever 21 website.',
+      image: 'images/elaine.jpg'
+    },
+    {
+      id: 'cengiz', name: 'Cengiz',
+      object: 'Super Saiyan hair',
+      reason: 'Electric, energizing, eclectic, chaotic, fun, original, unruly, adventurous — PSYCHOLOGICAL RICHNESS.',
+      image: 'images/cengiz.jpg'
+    },
+    {
+      id: 'adil', name: 'Adil',
+      object: 'Snorlax',
+      reason: 'I aspire to be a big sleeper like her — she lives the dream that I have been dreaming for years.',
+      image: 'images/adil.png'
+    },
+    {
+      id: 'danny', name: 'Danny',
+      object: 'Snorlax',
+      reason: 'She is the Master Jedi Sleeper — I am padawan sleeper but may have graduated at your wedding.',
+      image: 'images/danny.png'
+    },
+    {
+      id: 'adrienne', name: 'Adrienne',
+      object: 'Snorlax 👑',
+      reason: 'I think we all know. She\'s a big little napper queen.',
+      image: 'images/adrienne.png'
+    },
+    {
+      id: 'david', name: 'David Kennedy',
+      object: 'The kindest Snorlax',
+      reason: 'Because Elle adores a nap almost as much as she adores loving on her people ♡',
+      image: 'images/david.png'
+    },
+    {
+      id: 'michael', name: 'Michael Wong',
+      object: 'Chihuahuan raven',
+      reason: 'Like the raven, Elle is a force multiplier — almost a cheat code that people get very excited to see. And she will trade many things for food.',
+      image: 'images/michael.jpg'
+    },
+    {
+      id: 'alkamasi2', name: 'Alka Masi',
+      object: 'Pixie dust',
+      reason: 'She is free spirited, always smiling and happy. She will make Devin\'s dreams come true!!',
+      image: 'images/alkamasi2.jpg'
+    },
+    {
+      id: 'kirbnoj', name: 'Kirbnoj',
+      object: 'Techno sunglasses',
+      reason: 'We think we know presence, then she shows us a moment in flow. We think we know impact, then we see her on the ground. We think we know style — then we find her, without effort, setting the tone.',
+      image: 'images/kirbnoj.jpg'
+    },
+    {
+      id: 'tim1', name: 'Tim',
+      object: 'Jujube',
+      reason: 'Jujubes don\'t automatically turn red. Inside it, there are a few typhoons, a few lightnings, a few thunders.',
+      image: 'images/tim1.jpg'
+    },
+    {
+      id: 'tim2', name: 'Tim',
+      object: 'Two yolks in one egg',
+      reason: 'The most spontaneously beautiful thing, and rare, with so much life potential — and delicious.',
+      image: 'images/tim2.jpg'
+    },
+    {
+      id: 'pipe', name: 'Pipe & Mari',
+      object: 'Ellieeeen 👽',
+      reason: 'Best trip ever hiking with Elle and Sebas in Torres del Paine while singing "un mamut chiquitico".',
+      image: 'images/pipe.jpg'
+    },
+    {
+      id: 'claire', name: 'Claire',
+      object: 'Homemade mac and cheese',
+      reason: 'I had just moved to New York and was in an AirBnB. I invited Elle over and we sat at a tiny kitchen table talking for hours. I felt so excited I\'d get to spend more time with her in New York.',
+      image: 'images/claire.jpg'
+    },
+    {
+      id: 'rhan', name: 'Rhan',
+      object: 'Shopping at Bath & Body Works as a middle schooler',
+      reason: 'We were talking about moving back to the US for school after being in Korea. She said her memory of the US was going to Bath & Body Works and smelling the lotions.',
+      image: 'images/rhan.jpg'
+    },
+    {
+      id: 'amanda', name: 'Amanda',
+      object: 'A sparkling takeout container',
+      reason: 'After every hangout with Elle: "you\'re not going to WASTE that, are you?" She\'s a shining example of chosen friendship, built over great meals. Always unequivocally herself.',
+      image: 'images/amanda.jpg'
+    },
+    {
+      id: 'joanus', name: 'Jo anus',
+      object: 'A sleepy panda',
+      reason: 'I\'m always compared to a sleepy panda and so is Elle — which is a big bond because we live with our husbands who never sleep.',
+      image: 'images/joanus.jpg'
+    },
+    {
+      id: 'sumin', name: 'Sumin 수민이',
+      object: '부르부르도그',
+      reason: 'This character was on the cover of our "secret" diaries we exchanged when we were 7–8 years old. You\'ve always been such a sweet and brilliant friend with a big heart filled with creativity ❤️',
+      image: 'images/sumin.jpg'
+    },
+    {
+      id: 'jennifer', name: 'Jennifer Byun',
+      object: 'Medium-rare salmon steak',
+      reason: 'Warm, a little fiery, beautifully composed — and somehow still carrying the energy of Elle working nonstop while making it all look effortless.',
+      image: 'images/jennifer.jpg'
+    },
+    {
+      id: 'shreya', name: 'Shreya',
+      object: 'The Sun Setting',
+      reason: 'The Sun (Elle) sets (naps) to renew its energy and shine brighter for the next adventure ahead. Elle practices the sunset oath every day.',
+      image: 'images/shreya.jpg'
+    },
+    {
+      id: 'ari', name: 'Ari',
+      object: 'Futon',
+      reason: 'It\'s amazing how one person can be so energetic and then also sleep through anything. Versatile like a futon! But also — croissants were taken :\'(',
+      image: 'images/ari.jpg'
+    }
+  ];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('canvas');
+    const label  = document.getElementById('label');
+    const labelObj    = label.querySelector('.label__object');
+    const labelReason = label.querySelector('.label__reason');
+    const labelName   = label.querySelector('.label__name');
+
+    function positionLabel(wrapEl) {
+      const rect   = wrapEl.getBoundingClientRect();
+      const tipW   = parseInt(getComputedStyle(label).maxWidth) || 280;
+      const tipH   = label.offsetHeight || 140;
+      const margin = 18;
+
+      let left = rect.right + margin;
+      if (left + tipW > window.innerWidth - 8) {
+        left = rect.left - tipW - margin;
+      }
+      left = Math.max(8, left);
+
+      let top = rect.top + rect.height / 2 - tipH / 2;
+      top = Math.max(8, Math.min(top, window.innerHeight - tipH - 8));
+
+      label.style.left = left + 'px';
+      label.style.top  = top  + 'px';
+    }
+
+    function showLabel(c, wrapEl) {
+      labelObj.textContent    = c.object;
+      labelReason.textContent = c.reason;
+      labelName.textContent   = '— ' + c.name;
+      label.classList.add('is-visible');
+      // Reposition after content renders
+      requestAnimationFrame(() => positionLabel(wrapEl));
+    }
+
+    function hideLabel() {
+      label.classList.remove('is-visible');
+    }
+
+    contributors.forEach(c => {
+      const wrap = document.createElement('div');
+      wrap.className = `item-wrap item-wrap--${c.id}`;
+
+      wrap.innerHTML = `
+        <div class="item">
+          <img class="item__img" src="${c.image}" alt="${c.object}" loading="lazy">
+          <div class="item__overlay"></div>
+        </div>
+      `;
+
+      // Try .png then .jpeg if .jpg fails (backup-images preserves original extension)
+      const img  = wrap.querySelector('.item__img');
+      const base = c.image.replace(/\.(jpg|jpeg|png)$/i, '');
+      const alts = ['.jpg', '.png', '.jpeg'];
+      let altIdx = 0;
+      img.onerror = function () {
+        altIdx++;
+        if (altIdx < alts.length) this.src = base + alts[altIdx];
+      };
+
+      wrap.addEventListener('mouseenter', () => showLabel(c, wrap));
+      wrap.addEventListener('mouseleave', hideLabel);
+      wrap.addEventListener('mousemove', () => positionLabel(wrap));
+
+      wrap.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const alreadyActive = wrap.classList.contains('is-active');
+        document.querySelectorAll('.item-wrap.is-active')
+          .forEach(el => el.classList.remove('is-active'));
+        hideLabel();
+        if (!alreadyActive) {
+          wrap.classList.add('is-active');
+          showLabel(c, wrap);
+        }
+      });
+
+      canvas.appendChild(wrap);
+    });
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.item-wrap.is-active')
+        .forEach(el => el.classList.remove('is-active'));
+      hideLabel();
+    });
+  });
+</script>
+</body>
+</html>
